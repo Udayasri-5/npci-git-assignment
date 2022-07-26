@@ -1,0 +1,637 @@
+Name : Udayasri Chandrika
+Email : udayasrichandrika5@gmail.com
+
+              *****************Take home 23-07-22********************
+              
+              
+  <!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>Forms</title>
+<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CSS -->
+    <link href="Forms_files/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+<script src="Forms_files/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+<script src="Forms_files/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+
+<link rel="stylesheet" href="Forms_files/style.css">
+
+<styel>
+
+</styel>
+
+</head>
+<body style="margin-top : 50px" class="container">
+<form action="LoginValidation" method="post">
+<div class="row">
+<div class="col-md-2">
+<div class="part1">
+<label class="form-label" style="color:blue;margin-left:80mm;text-align:center;padding:20px"><b>EmailID</b></label> </div>
+</div>
+
+<div class="col-md-4" style="color:blue;margin-right:200mm;text-align:center;padding:20px">
+<input type="text" name="emailId" class="form-control" value="email ID">
+</div>
+
+<div class="row">
+<div class="col-md-4">
+
+<label class="form-label" style="color:blue;margin-left:80mm;text-align:center;padding:20px"><b>Password<b></b></label>
+<input type="password" name="pswd" class="form-control" value="password">
+</div>
+</div>
+&nbsp;
+<div class="row">
+<div class="col-md-4">
+
+<button type="submit" class="btn btn-primary" style="background-color:yellow;font-size:20px;margin-left:80mm">Log In </button>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+
+</form>
+</body></html>
+-----------------------------------------------------------------------------------------------------------------------------------------------
+
+package loginin;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+/**
+ * Servlet implementation class LoginValidation
+ */
+@WebServlet("/LoginValidation")
+public class LoginValidation extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+       
+    /**
+     * @see HttpServlet#HttpServlet()
+     */
+    public LoginValidation() {
+        super();
+        // TODO Auto-generated constructor stub
+    }
+
+	/**
+	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+	//	response.getWriter().append("Served at: ").append(request.getContextPath());
+		
+		PrintWriter out = response.getWriter();
+	//	out.println("Login Validation..."); 
+		response.setContentType("text/html");
+		
+		String emailID = request.getParameter("emailId");
+		String password = request.getParameter("pswd");
+		
+		System.out.println(emailID);
+		System.out.println(password);
+		
+		try {
+			if(validate(emailID,password)) {
+				out.println("welcome " + emailID);
+				HttpSession session1 = request.getSession();
+				session1.setAttribute("email", emailID);
+				HttpSession session2 = request.getSession();
+				String Emp_name = getEmpName(emailID);
+				session2.setAttribute("emp_name",Emp_name);
+			//	response.sendRedirect("Details");
+				response.sendRedirect("HomePageServelet");
+			}
+			else {
+				out.println("invalid credentials...");
+				RequestDispatcher dispatcher = request.getRequestDispatcher("login.html");
+				dispatcher.include(request, response);
+			}
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		}
+
+	private String getEmpName(String emailID) throws ClassNotFoundException, SQLException {
+		
+		Connection connect = getConnection();
+		PreparedStatement p = connect.prepareStatement("select emp_name from Employe where emp_no = (select emp_no from loginCredentials where emailid = ?)" );
+		// TODO Auto-generated method stub
+		p.setString(1, emailID);
+		
+		ResultSet r = p.executeQuery();
+		
+		if(r.next())
+			return r.getString(1);
+		return null;
+		
+	}
+
+	/**
+	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
+	 */
+	
+	public Connection getConnection() throws ClassNotFoundException, SQLException {
+		Class.forName("com.mysql.cj.jdbc.Driver");
+
+		return DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/EMPLOYEEDB","npci","DBUserStr0ngPassw0d.");
+	
+     }
+	
+	private boolean validate(String emailID, String password) throws SQLException, ClassNotFoundException {
+		
+		Connection connect = getConnection();
+		PreparedStatement p = connect.prepareStatement("select emailid , password from loginCredentials where emailid = ? and password = ?");
+		p.setString(1, emailID);
+		p.setString(2, password);
+		
+		ResultSet r = p.executeQuery();
+		if(r.next())
+			return true;
+		
+		return false;
+	}
+}
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+package loginin;
+
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+/**
+ * Servlet implementation class logout
+ */
+@WebServlet("/logout")
+public class logout extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+       
+    /**
+     * @see HttpServlet#HttpServlet()
+     */
+    public logout() {
+        super();
+        // TODO Auto-generated constructor stub
+    }
+
+	/**
+	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+		response.getWriter().append("Served at: ").append(request.getContextPath());
+		doPost(request,response);
+	}
+
+	/**
+	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+		HttpSession session = request.getSession();
+		session.invalidate();
+		response.sendRedirect("login.html");
+		
+		//doGet(request, response);
+	}
+
+}
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------
+
+package loginin;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+/**
+ * Servlet implementation class HomePageServelet
+ */
+@WebServlet("/HomePageServelet")
+public class HomePageServelet extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+       
+    /**
+     * @see HttpServlet#HttpServlet()
+     */
+    public HomePageServelet() {
+        super();
+        // TODO Auto-generated constructor stub
+    }
+
+	/**
+	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+	//	response.getWriter().append("Served at: ").append(request.getContextPath());
+		HttpSession session1 = request.getSession();
+		String email = (String)session1.getAttribute("email");
+		HttpSession session2 = request.getSession();
+		String emp_name = (String)session2.getAttribute("emp_name");
+		PrintWriter out = response.getWriter();
+		response.setContentType("text/html");
+	
+		out.println("Welcome" + emp_name);
+		
+		out.print("<!DOCTYPE html>\n"
+				+ "<html><head>\n"
+				+ "<meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\">\n"
+				+ "<title>Forms</title>\n"
+				+ "<meta charset=\"utf-8\">\n"
+				+ "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
+				+ "\n"
+				+ "    <!-- Bootstrap CSS -->\n"
+				+ "    <link href=\"Forms_files/bootstrap.min.css\" rel=\"stylesheet\" integrity=\"sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC\" crossorigin=\"anonymous\">\n"
+				+ "\n"
+				+ "<script src=\"Forms_files/popper.min.js\" integrity=\"sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p\" crossorigin=\"anonymous\"></script>\n"
+				+ "<script src=\"Forms_files/bootstrap.min.js\" integrity=\"sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF\" crossorigin=\"anonymous\"></script>\n"
+				+ "\n"
+				+ "<link rel=\"stylesheet\" href=\"Forms_files/style.css\">\n"
+				+ "\n"
+				+ "<style>\n"
+				+ "\n"
+				+ " #part1{\n"
+				+ " float:left;\n"
+				+ " margin-left:40mm;\n"
+				+ " padding:30px;\n"
+				+ " border : 5px solid skyblue;\n"
+				+ " \n"
+				+ " \n"
+				+ " }\n"
+				+ " \n"
+				+ " #part2{\n"
+				+ " float:right;\n"
+				+ " margin-right:150mm;\n"
+				+ " padding:50px;\n"
+				+ " border : 5px solid skyblue;\n"
+				+ " }\n"
+				+ " \n"
+				+ " \n"
+				+ "</style>\n"
+				+ "\n"
+				+ "</head>\n"
+				+ "<body style=\"margin-top : 50px;\" class=\"container\">\n"
+				+ "<form action=\"HomePageServelet\" method=\"post\">\n"
+				+ "\n"
+				+ "<div class=\"container\">\n"
+				+ "<div class=\"row\" >\n"
+				+ "	<div class=\"col-md-2\" id=\"part1\">\n"
+				+ "\n"
+				+ "\n"
+				+ "		<div class=\"row\">\n"
+				+ "		<div class=\"col-md-2\"\n"
+				+ "			<p> <b><i> Enter Timesheet Details</i></b> </p>\n"
+				+ "\n"
+				+ "			<label class=\"form-label\"><b>Emp_no</b></label> </div>\n"
+				+ "		</div>\n"
+				+ "\n"
+				+ "		<div class=\"col-md-4\">\n"
+				+ "		<input type=\"number\" name=\"emp_no\" class=\"form-control\">\n"
+				+ "		</div>\n"
+				+ "		\n"
+				+ "		<br><br>\n"
+				+ "\n"
+				+ "		<div class=\"row\">\n"
+				+ "		<label class=\"form-label\"><b>Year<b></label>\n"
+				+ "		<div class=\"col-md-4\">\n"
+				+ "\n"
+				+ "\n"
+				+ "		<input type=\"number\" name=\"year\" class=\"form-control\">\n"
+				+ "		</div>\n"
+				+ "		</div>\n"
+				+ "		<br><br>\n"
+				+ "\n"
+				+ "		<div class=\"row\">\n"
+				+ "		<label class=\"form-label\"><b>Month</></label>\n"
+				+ "		<div class=\"col-md-4\">\n"
+				+ "\n"
+				+ "		<input type=\"text\" name=\"month\" class=\"form-control\">\n"
+				+ "		</div>\n"
+				+ "		</div>\n"
+				+ "		\n"
+				+ "		<br><br>\n"
+				+ "		<div class=\"row\">\n"
+				+ "		<label class=\"form-label\"><b>No of Working days<b>\n"
+				+ "		</label>\n"
+				+ "		<div class=\"col-md-4\">\n"
+				+ "\n"
+				+ "\n"
+				+ "		<input type=\"number\" name=\"working_days\" class=\"form-control\">\n"
+				+ "		</div>\n"
+				+ "		</div>\n"
+				+ "		&nbsp;\n"
+				+ "	<br><br>	\n"
+				+ "	<br><br>	<button type=\"submit\" class=\"btn btn-primary\" style=\"background-color:yellow;font-size:20px\">Proceed</button>\n"
+				+ "		</div>\n"
+				+ "		</div>\n"
+				+ "\n"
+				+ "	</div>\n"
+				+ "\n"
+				+ "	<div class=\"col-md-2\" id=\"part2\">\n"
+				+ "\n"
+				+ "		<div> Payslip Generator</div>\n"
+				+ "		<br><br>\n"
+				+ "\n"
+				+ "		<div class = \"row\">\n"
+				+ "		<label class=\"form-label\"><b>Year</b></label>\n"
+				+ "		<div class=\"col-md-4\">\n"
+				+ "		<input type=\"number\" name=\"yearforpayslip\" class=\"form-control\">\n"
+				+ "		</div>\n"
+				+ "		</div>\n"
+				+ "                <br>\n"
+				+ "                <br>\n"
+				+ "		<div class=\"row\">\n"
+				+ "		<label class=\"form-label\"><b>Month</b></label>\n"
+				+ "		<div vlass=\"col-md-4\">\n"
+				+ "		<input type=\"text\" name=\"monthforpayslip\" class=\"form-control\">\n"
+				+ "		</div>\n"
+				+ "		</div>\n"
+				+ "\n"
+				+ "		<br><br>\n"
+				+ "		<div class=\"row\">\n"
+				+ "		<div class=\"col-md-4\">\n"
+				+ "		<button type=\"submit\" class=\"btn btn-secondary\" style=\"background-color:yellow;font-size:20px\">Generate payslip</button>\n"
+				+ "\n"
+				+ "		</div>\n"
+				+ "		</div>\n"
+				+ "\n"
+				+ "	</div>\n"
+				+ "</div>\n"
+				+ "</div>\n"
+				+ "</form>\n"
+				+ "</body></html>");
+		
+		
+			
+		
+		   out.println("<br><br><br><br><br> <br><br><br><br><br><br><br><br><br<br><br><br><br><br><br><br><br><br><a href='logout'>Logout</a>");
+		
+		
+		doPost(request,response);
+	}
+
+	/**
+	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+		
+		PrintWriter out = response.getWriter();
+		response.setContentType("text/html");
+
+		    int emp_no = Integer.parseInt(request.getParameter("emp_no"));
+			int NoWD = Integer.parseInt(request.getParameter("working_days"));
+			String Month = request.getParameter("month");
+			int Year = Integer.parseInt(request.getParameter("year"));
+			
+			int yearForPaySlip = Integer.parseInt(request.getParameter("yearforpayslip"));
+			String monthForPaySlip = request.getParameter("monthForPaySlip");
+		//	int monthForPaySlip = Integer.parseInt(request.getParameter("monthForPaySlip"));
+			
+			response.setContentType("text/html");
+			HttpSession session = request.getSession();
+			HttpSession session1 = request.getSession();
+			String email = (String)session1.getAttribute("email");
+			
+				
+			try {	
+				String hiredate = getHireYear(email);
+				
+				if(Integer.valueOf(hiredate.substring(6)) <= (Year) && isValidDays(NoWD,Month,Year) == true) {
+				 insertIntoTimeSheet(emp_no,Year,Month,NoWD);
+				
+				out.print("<p> Welcome" + session.getAttribute("email") + "</p>");
+				out.print("<div style=\"color:green;font-weight:bold\"> <p>Your timesheet details of current month are entered succesfully</p></div>");
+				out.println("<div style=\"font-weight:bold\"><a href='HomePageServelet'>Go back</a> </div>");
+				out.println("<div style=\"font-weight:bold\"><br><a href='logout'>Logout</a> </div>");
+				
+				}else {
+					out.println("<p> Please choose a valid year</p>");
+					out.println("<div style=\"font-weight:bold\"><a href='HomePageServelet'>Go back</a> </div>");
+					out.println("<div style=\"font-weight:bold\"><br><a href='logout'>Logout</a> </div>");
+					
+				}
+				
+				
+				if(Integer.valueOf(hiredate.substring(6)) <= (yearForPaySlip)) {
+					
+					int salary = getNoOfWorkingdays(monthForPaySlip,email) * getSalary(email)/30;
+					float HRA = (float) (salary * 0.12);
+					int deductions = 2000;
+					 out.println("Welcom " +" " +session.getAttribute("email") + "</p>");
+					 out.print(" <p>Basic Salary :" + salary + "</p>");
+					 out.println("<p> HRA : " + HRA + "</p>");
+					 out.println("<p> Deductions => PF :1800  ; 	Profession tax : 200 </p> ");
+					 out.println("<p> Net Payable Salary " + (salary+HRA+deductions) +"</p>" );
+					 out.println("<br> <a href='HomePageServelet'>Go Back </a>");
+					 out.println("<br> <a href='logout'>Logout</a>");
+					 
+				}
+				
+			
+			} catch (ClassNotFoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (SQLException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}	
+		
+	}
+	
+	public int getNoOfWorkingdays(String month,String email ) throws SQLException, ClassNotFoundException {
+		Connection connect = getConnection();
+		PreparedStatement p = connect.prepareStatement("select no_of_working_days from timesheetdetails where month = ? and emp_no = (select emp_no from loginCredentials where emailid = ?)");
+		p.setString(1,month);
+		p.setString(2, email);
+		
+		
+		ResultSet r = p.executeQuery();
+		if(r.next())
+			return r.getInt(1);
+		
+		return (Integer) null;
+	}
+	
+	public int getSalary(String email) throws SQLException, ClassNotFoundException {
+		Connection connect = getConnection();
+		PreparedStatement p = connect.prepareStatement("select Salary from Employe where emp_no = (select emp_no from loginCredentials where emailid = ?)");
+		p.setString(1, email);
+		
+		
+		ResultSet r = p.executeQuery();
+		if(r.next())
+			return r.getInt(1);
+		
+		return (Integer) null;
+		
+	}
+
+	private boolean isValidDays(int NoWD,String Month ,int Year) {
+		// TODO Auto-generated method stub
+	    Month = Month.toLowerCase();
+		
+		if(Month == "january" || Month == "march" || Month == "may" || Month == "july" || Month =="august" || Month == "october" || Month == "decenmber" && NoWD > 30 ) {
+		   return false;	
+		}else if(((Year%4== 0 && Year%100 != 0) || Year%400 ==0) && NoWD > 29 && Month == "febraury"){
+			return false;
+		}else if(Month == "april" || Month == "june" || Month == "september" || Month == "november"  && NoWD > 31) {
+			   return false;
+		}
+		return true;
+	}
+
+	private int getEmployeeNumber(String email) throws SQLException, ClassNotFoundException {
+		// TODO Auto-generated method stub
+		
+		Connection connect = getConnection();
+		PreparedStatement p = connect.prepareStatement("select emp_no from Employe where emp_no = (select emp_no from loginCredentials where emailid = ?)");
+		p.setString(1, email);
+		
+		
+		ResultSet r = p.executeQuery();
+		if(r.next())
+			return r.getInt(1);
+		
+		return (Integer) null;
+		
+	}
+	
+	private String getHireYear(String email) throws SQLException, ClassNotFoundException {
+		// TODO Auto-generated method stub
+		
+		Connection connect = getConnection();
+		PreparedStatement p = connect.prepareStatement("select HireDate from Employe where emp_no = (select emp_no from loginCredentials where emailid = ?)");
+		p.setString(1, email);
+		
+		
+		ResultSet r = p.executeQuery();
+		if(r.next())
+			return r.getString(1);
+		
+		return null;
+		
+	}
+	public void insertIntoTimeSheet(int emp_no,int Year,String Month,int NoWD) throws SQLException, ClassNotFoundException {
+		Connection connect = getConnection();
+		PreparedStatement p = connect.prepareStatement("insert into timesheetdetails values(?,?,?,?)");
+		
+		p.setInt(1, emp_no);
+		p.setInt(2, Year);
+		p.setString(3, Month);
+		p.setInt(4, NoWD);
+		
+		
+		p.execute();
+		p.close();
+		connect.close();
+		
+		
+		
+	}
+	public Connection getConnection() throws ClassNotFoundException, SQLException {
+		Class.forName("com.mysql.cj.jdbc.Driver");
+
+		return DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/EMPLOYEEDB","npci","DBUserStr0ngPassw0d.");
+	
+     }
+
+}
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd" id="WebApp_ID" version="4.0">
+  <display-name>EmployeManagement1</display-name>
+  <welcome-file-list>
+    
+    <welcome-file>login.html</welcome-file>
+    
+  </welcome-file-list>
+</web-app>
+
+
+
+--------------------------------------------------------------------------------------------
+
+
+SQL queries
+
+
+
+
+create table Employe(emp_no int primary key,
+emp_name text, 
+job text ,
+HireDate text,
+ManagerID int,
+Salary int,
+Commision text,
+DeptNo int ,
+foreign key (Deptno) REFERENCES DEPARTMENT(DeptNo));
+
+
+create table DEPARTMENT(DeptNo int primary key,
+DeptName varchar(50),
+Location varchar(50));
+
+
+
+
+create table loginCredentials(emp_no int,
+emailid varchar(50),
+password text,
+foreign key (emp_no) references Employe(emp_no));
+
+
+
+create table timesheetdetails(emp_no int,
+no_of_working_days int ,
+ month varchar(20),
+ year int,
+ foreign key (emp_no) references Employe(emp_no));
